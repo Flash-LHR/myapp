@@ -7,22 +7,27 @@ on:
     branches: [ master ]
 
 jobs:
-  code-quality-check:
-    name: 代码质量检查
+  ci-pipeline:
+    name: 完整CI流水线
     runs-on: ubuntu-latest
     steps:
+    # 1. 准备工作
     - name: Checkout代码
       uses: actions/checkout@v4
 
-    - name: 安装工具
+    - name: 安装所有工具
       run: |
         sudo apt-get update
-        sudo apt-get install -y clang-format clang-tidy
+        sudo apt-get install -y clang-format clang-tidy lcov bc
 
+    # 2. 代码格式检查
     - name: 检查代码格式
       run: |
+        echo "🎨 检查代码格式..."
         find app -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.h" -o -name "*.hpp" -o -name "*.hxx" | xargs clang-format --dry-run --Werror
+        echo "✅ 代码格式检查通过"
 
+    # 3. 设置Bazel (只设置一次)
     - name: 设置Bazel
       uses: bazelbuild/setup-bazelisk@v3
 
@@ -35,53 +40,40 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-bazel-
 
+    # 4. 静态代码分析
     - name: 生成编译数据库
       run: |
+        echo "📝 生成编译数据库..."
         bazel run @hedron_compile_commands//:refresh_all
 
     - name: 运行静态分析
       run: |
+        echo "🔍 运行静态分析..."
         find app -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.h" -o -name "*.hpp" -o -name "*.hxx" | xargs clang-tidy -p . --quiet
+        echo "✅ 静态分析检查通过"
 
-  build-test-coverage:
-    name: 构建、测试和覆盖率
-    runs-on: ubuntu-latest
-    needs: [code-quality-check]
-    steps:
-    - name: Checkout代码
-      uses: actions/checkout@v4
-
-    - name: 设置Bazel
-      uses: bazelbuild/setup-bazelisk@v3
-
-    - name: 缓存Bazel
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cache/bazel
-        key: ${{ runner.os }}-bazel-${{ hashFiles('MODULE.bazel', 'MODULE.bazel.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-bazel-
-
-    - name: 安装覆盖率工具
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y lcov bc
-
+    # 5. 构建和测试
     - name: 构建项目
       run: |
+        echo "🔨 构建项目..."
         bazel build //app:main
+        echo "✅ 项目构建成功"
 
     - name: 运行单元测试
       run: |
+        echo "🧪 运行单元测试..."
         bazel test //app/... --test_output=all
+        echo "✅ 单元测试通过"
 
+    # 6. 代码覆盖率
     - name: 生成覆盖率报告
       run: |
+        echo "📊 生成覆盖率报告..."
         bazel coverage //app/... --combined_report=lcov --coverage_report_generator=@bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main
 
     - name: 处理覆盖率数据
       run: |
+        echo "📈 处理覆盖率数据..."
         # 生成HTML报告
         genhtml bazel-out/_coverage/_coverage_report.dat -o coverage_html
         
@@ -111,34 +103,22 @@ jobs:
         name: coverage-report
         path: coverage_html/
 
-  security-scan:
-    name: 安全扫描
-    runs-on: ubuntu-latest
-    # 与主要构建并行运行，独立进行
-    steps:
-    - name: Checkout代码
-      uses: actions/checkout@v4
-
-    - name: 运行CodeQL分析
+    # 7. 安全扫描
+    - name: 初始化CodeQL安全扫描
       uses: github/codeql-action/init@v3
       with:
         languages: cpp
 
-    - name: 设置Bazel
-      uses: bazelbuild/setup-bazelisk@v3
+    - name: 执行CodeQL安全分析
+      uses: github/codeql-action/analyze@v3
 
-    - name: 缓存Bazel
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cache/bazel
-        key: ${{ runner.os }}-bazel-${{ hashFiles('MODULE.bazel', 'MODULE.bazel.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-bazel-
-
-    - name: 构建项目
+    # 8. 总结
+    - name: CI流水线完成
       run: |
-        bazel build //app:main
-
-    - name: 执行CodeQL分析
-      uses: github/codeql-action/analyze@v3 
+        echo "🎉 CI流水线执行完成!"
+        echo "✅ 代码格式检查通过"
+        echo "✅ 静态分析通过" 
+        echo "✅ 项目构建成功"
+        echo "✅ 单元测试通过"
+        echo "✅ 覆盖率检查通过"
+        echo "✅ 安全扫描完成" 
