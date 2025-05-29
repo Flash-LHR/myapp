@@ -9,16 +9,13 @@ on:
 jobs:
   ci-pipeline:
     name: 完整CI流水线
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/quarklink/images/cpp-bazel-ci:1.0.0
     steps:
     # 1. 准备工作
     - name: Checkout代码
       uses: actions/checkout@v4
-
-    - name: 安装所有工具
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y clang-format clang-tidy lcov bc
 
     # 2. 代码格式检查
     - name: 检查代码格式
@@ -27,25 +24,13 @@ jobs:
         find app -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.h" -o -name "*.hpp" -o -name "*.hxx" | xargs clang-format --dry-run --Werror
         echo "✅ 代码格式检查通过"
 
-    # 3. 设置Bazel (只设置一次)
-    - name: 设置Bazel
-      uses: bazelbuild/setup-bazelisk@v3
-
-    - name: 缓存Bazel
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cache/bazel
-        key: ${{ runner.os }}-bazel-${{ hashFiles('MODULE.bazel', 'MODULE.bazel.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-bazel-
-
-    # 4. 静态代码分析
+    # 3. 静态代码分析
     - name: 生成编译数据库
       run: |
         echo "📝 生成编译数据库..."
         bazel run @hedron_compile_commands//:refresh_all
 
+    # 4. 运行静态分析
     - name: 运行静态分析
       run: |
         echo "🔍 运行静态分析..."
@@ -103,7 +88,7 @@ jobs:
         name: coverage-report
         path: coverage_html/
 
-    # 7. 安全扫描
+    # 6. 安全扫描
     - name: 初始化CodeQL安全扫描
       uses: github/codeql-action/init@v3
       with:
@@ -112,7 +97,7 @@ jobs:
     - name: 执行CodeQL安全分析
       uses: github/codeql-action/analyze@v3
 
-    # 8. 总结
+    # 7. 总结
     - name: CI流水线完成
       run: |
         echo "🎉 CI流水线执行完成!"

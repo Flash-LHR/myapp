@@ -83,7 +83,7 @@ lint:
 		echo "📝 刷新编译数据库..."; \
 		cd .. && bazel run @hedron_compile_commands//:refresh_all; \
 		echo "🔍 运行clang-tidy分析..."; \
-		cd .. && find app -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.h" -o -name "*.hpp" -o -name "*.hxx" | xargs clang-tidy -p . --quiet; \
+		find app -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.h" -o -name "*.hpp" -o -name "*.hxx" | xargs clang-tidy -p . --quiet; \
 		echo "✅ 静态分析完成"; \
 	else \
 		echo "❌ clang-tidy未安装，请先安装: sudo apt-get install clang-tidy"; \
