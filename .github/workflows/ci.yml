@@ -66,8 +66,8 @@ jobs:
         COVERAGE=$(lcov --summary bazel-out/_coverage/_coverage_report.dat 2>&1 | grep "lines......" | awk '{print $2}' | sed 's/%//')
         echo "代码覆盖率: ${COVERAGE}%"
         
-        # 检查覆盖率是否达到85%
-        if (( $(echo "$COVERAGE >= 85" | bc -l) )); then
+        # 检查覆盖率是否达到85% (使用awk进行数值比较)
+        if awk "BEGIN {if($COVERAGE >= 85) exit 0; else exit 1}"; then
           echo "✅ 覆盖率测试通过: ${COVERAGE}% >= 85%"
         else
           echo "❌ 覆盖率测试失败: ${COVERAGE}% < 85%"
