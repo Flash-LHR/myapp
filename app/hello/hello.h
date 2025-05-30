@@ -3,6 +3,6 @@
 
 #include <string>
 
-std::string hello(int x);
+std::string hello(int x) noexcept;
 
 #endif  // APP_HELLO_HELLO_H
