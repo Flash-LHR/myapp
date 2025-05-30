@@ -1,0 +1,46 @@
+name: 定时安全扫描
+
+on:
+  # 每日凌晨2点运行安全扫描
+  schedule:
+    - cron: '0 2 * * *'  # UTC时间凌晨2点，对应北京时间上午10点
+  
+  # 允许手动触发
+  workflow_dispatch:
+
+jobs:
+  security-scan:
+    name: CodeQL安全扫描
+    runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/quarklink/images/cpp-bazel-ci:1.0.5
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+    steps:
+    - name: Checkout代码
+      uses: actions/checkout@v4
+
+    - name: 初始化CodeQL安全扫描
+      uses: github/codeql-action/init@v3
+      with:
+        languages: cpp
+        queries: security-and-quality
+
+    - name: 构建项目用于安全分析
+      run: |
+        echo "🔨 构建项目用于安全分析..."
+        bazel build //...
+        echo "✅ 构建完成"
+
+    - name: 执行CodeQL安全分析
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:cpp"
+
+    - name: 安全扫描完成通知
+      run: |
+        echo "🔍 安全扫描已完成"
+        echo "📊 请查看 GitHub Security 标签页获取详细报告"
+        echo "🔗 https://github.com/${{ github.repository }}/security/code-scanning" 

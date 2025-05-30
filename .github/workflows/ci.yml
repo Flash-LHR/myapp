@@ -93,34 +93,3 @@ jobs:
         name: coverage-report
         path: coverage_html/
 
-  # 安全扫描
-  security:
-    name: 安全扫描
-    runs-on: ubuntu-22.04
-    container:
-      image: ghcr.io/quarklink/images/cpp-bazel-ci:1.0.5
-    permissions:
-        security-events: write
-        contents: read
-    steps:
-    - name: Checkout代码
-      uses: actions/checkout@v4
-
-    - name: 初始化CodeQL安全扫描
-      uses: github/codeql-action/init@v3
-      with:
-        languages: cpp
-
-    - name: 构建项目用于安全分析
-      run: |
-        echo "🔨 构建项目用于安全分析..."
-        bazel build //...
-
-    - name: 执行CodeQL安全分析
-      uses: github/codeql-action/analyze@v3
-      with:
-        # 可选：设置发现漏洞时的行为
-        fail-on-error: true  # 发现错误时失败
-        # 或者使用以下配置只对严重漏洞失败
-        # fail-on: "error,critical,high"
-
