@@ -5,7 +5,7 @@
 
 // 1. 缓冲区溢出漏洞 - CodeQL应该检测CWE-120
 void buffer_overflow_demo() {
-  char buffer[100];
+  char buffer[10];
   char* dangerous_input = "This is a very long string that will overflow the buffer";
   strcpy(buffer, dangerous_input);  // 危险！缓冲区溢出
   printf("Buffer: %s\n", buffer);
