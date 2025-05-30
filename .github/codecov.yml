@@ -12,14 +12,12 @@ coverage:
     project:
       default:
         target: 85%          # 目标覆盖率
-        threshold: 0%        # 允许的下降幅度
         if_ci_failed: error  # CI失败时的行为
 
     # 增量覆盖率（patch coverage）
     patch:
       default:
         target: 85%          # 新增代码覆盖率要求
-        threshold: 0%        # 不允许下降
         if_ci_failed: error  # CI失败时的行为
 
   # 忽略的文件和目录
