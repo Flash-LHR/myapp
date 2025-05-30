@@ -1,4 +1,4 @@
-.PHONY: build test coverage clean format lint help install-deps
+.PHONY: build test coverage clean format lint help install-deps incremental-coverage
 
 # 默认目标
 all: build test
@@ -55,6 +55,16 @@ coverage-check: coverage
 		exit 1; \
 	fi
 
+# 增量覆盖率检查
+incremental-coverage: coverage
+	@echo "🎯 执行增量覆盖率检查..."
+	@if [ ! -f incremental_coverage.sh ]; then \
+		echo "❌ 增量覆盖率脚本不存在: incremental_coverage.sh"; \
+		exit 1; \
+	fi
+	@chmod +x incremental_coverage.sh
+	@cd .. && ./tools/incremental_coverage.sh bazel-out/_coverage/_coverage_report.dat HEAD~1 85
+
 # 格式化代码
 format:
 	@echo "🎨 格式化代码..."
@@ -95,11 +105,12 @@ clean:
 	@echo "🧹 清理构建文件..."
 	cd .. && bazel clean
 	cd .. && rm -rf coverage_html/
+	cd .. && rm -rf incremental_coverage_html/
 	cd .. && rm -rf bazel-*
 
 
 # 完整的CI检查流程 (跳过format-check和lint如果工具未安装)
-ci-check: test coverage-check
+ci-check: test incremental-coverage
 	@echo "🔧 运行可用的代码质量检查..."
 	@if command -v clang-format >/dev/null 2>&1; then \
 		$(MAKE) format-check; \
@@ -116,14 +127,15 @@ ci-check: test coverage-check
 # 帮助信息
 help:
 	@echo "可用的make目标:"
-	@echo "  build         - 构建项目"
-	@echo "  run           - 运行主程序"
-	@echo "  test          - 运行所有测试"
-	@echo "  coverage      - 生成代码覆盖率报告"
-	@echo "  coverage-check- 检查覆盖率是否达到85%"
-	@echo "  format        - 格式化代码"
-	@echo "  format-check  - 检查代码格式"
-	@echo "  lint          - 运行静态分析"
-	@echo "  clean         - 清理构建文件"
-	@echo "  ci-check      - 运行完整的CI检查流程"
-	@echo "  help          - 显示此帮助信息" 
+	@echo "  build              - 构建项目"
+	@echo "  run                - 运行主程序"
+	@echo "  test               - 运行所有测试"
+	@echo "  coverage           - 生成代码覆盖率报告"
+	@echo "  coverage-check     - 检查总体覆盖率是否达到85%"
+	@echo "  incremental-coverage - 检查增量覆盖率是否达到85%"
+	@echo "  format             - 格式化代码"
+	@echo "  format-check       - 检查代码格式"
+	@echo "  lint               - 运行静态分析"
+	@echo "  clean              - 清理构建文件"
+	@echo "  ci-check           - 运行完整的CI检查流程（包含增量覆盖率）"
+	@echo "  help               - 显示此帮助信息" 

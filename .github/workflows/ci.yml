@@ -43,6 +43,9 @@ jobs:
     steps:
     - name: Checkout代码
       uses: actions/checkout@v4
+      with:
+        # 获取完整历史记录以支持增量覆盖率分析
+        fetch-depth: 0
 
     - name: 构建项目
       run: |
@@ -67,17 +70,22 @@ jobs:
         # 生成HTML报告
         genhtml bazel-out/_coverage/_coverage_report.dat -o coverage_html
         
-        # 计算覆盖率百分比
-        COVERAGE=$(lcov --summary bazel-out/_coverage/_coverage_report.dat 2>&1 | grep "lines......" | awk '{print $2}' | sed 's/%//')
-        echo "代码覆盖率: ${COVERAGE}%"
-        
-        # 检查覆盖率是否达到85% (使用awk进行数值比较)
-        if awk "BEGIN {if($COVERAGE >= 85) exit 0; else exit 1}"; then
-          echo "✅ 覆盖率测试通过: ${COVERAGE}% >= 85%"
+        # 计算总体覆盖率百分比
+        TOTAL_COVERAGE=$(lcov --summary bazel-out/_coverage/_coverage_report.dat 2>&1 | grep "lines......" | awk '{print $2}' | sed 's/%//')
+        echo "总体代码覆盖率: ${TOTAL_COVERAGE}%"
+
+    - name: 增量覆盖率检查
+      run: |
+        # 确定基础分支
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          BASE_REF="origin/${{ github.base_ref }}"
         else
-          echo "❌ 覆盖率测试失败: ${COVERAGE}% < 85%"
-          exit 1
+          BASE_REF="HEAD~1"
         fi
+        
+        # 设置脚本执行权限并运行增量覆盖率检查
+        chmod +x tools/incremental_coverage.sh
+        ./tools/incremental_coverage.sh bazel-out/_coverage/_coverage_report.dat "$BASE_REF" 85
 
     - name: 上传覆盖率到Codecov
       uses: codecov/codecov-action@v5
@@ -92,4 +100,11 @@ jobs:
       with:
         name: coverage-report
         path: coverage_html/
+
+    - name: 上传增量覆盖率报告
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: incremental-coverage-report
+        path: incremental_coverage_html/
 
