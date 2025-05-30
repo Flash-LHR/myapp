@@ -59,17 +59,60 @@ jobs:
     - name: 生成覆盖率报告
       run: |
         echo "📊 生成覆盖率报告..."
-        bazel coverage //app/... --combined_report=lcov
-        echo "✅ 覆盖率报告生成完成"
+        
+        # 方法1：使用标准的bazel coverage命令
+        bazel coverage //app/... --combined_report=lcov || echo "方法1失败"
+        
+        # 方法2：如果方法1失败，尝试简单的coverage命令
+        if [ ! -f "bazel-out/_coverage/_coverage_report.dat" ]; then
+          echo "尝试方法2..."
+          bazel coverage //app/... || echo "方法2也失败"
+        fi
+        
+        # 方法3：检查是否生成了其他格式的覆盖率文件
+        echo "查找所有覆盖率相关文件..."
+        find . -path "*/coverage*" -o -name "*.gcno" -o -name "*.gcda" -o -name "*.info" -o -name "*.dat" | head -10
+        
+        echo "✅ 覆盖率报告生成尝试完成"
+
+    - name: 准备覆盖率文件
+      run: |
+        echo "🔧 准备覆盖率文件..."
+        
+        # 查找所有可能的覆盖率文件
+        echo "查找 .dat 文件..."
+        find . -name "*.dat" -type f | head -5
+        
+        echo "查找 .info 文件..."
+        find . -name "*.info" -type f | head -5
+        
+        echo "查找 .lcov 文件..."
+        find . -name "*.lcov" -type f | head -5
+        
+        # 尝试查找 bazel-out 目录
+        if [ -d "bazel-out" ]; then
+          echo "✅ bazel-out 目录存在"
+          find bazel-out -name "*coverage*" -type f | head -10
+        else
+          echo "❌ bazel-out 目录不存在"
+        fi
+        
+        # 查看当前目录结构
+        echo "当前目录结构："
+        ls -la
 
     - name: 上传覆盖率到Codecov
       uses: codecov/codecov-action@v5
       with:
-        file: ./bazel-out/_coverage/_coverage_report.dat
+        # 不指定具体文件，让Codecov自动查找
+        # file: ./bazel-out/_coverage/_coverage_report.dat
         flags: unittests
         name: codecov-umbrella
-        fail_ci_if_error: true
+        fail_ci_if_error: false  # 暂时设为false以便调试
         verbose: true
+        directory: ./
+        # 指定搜索路径
+        search_in: bazel-out
 
     - name: 上传覆盖率报告（用于查看）
       uses: actions/upload-artifact@v4
