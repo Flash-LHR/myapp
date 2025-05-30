@@ -4,6 +4,6 @@
 #include "app/world/world.h"
 
 int main() {
-  std::cout << hello() + world() << std::endl;
+  std::cout << hello(1) + world() << std::endl;
   return 0;
 }

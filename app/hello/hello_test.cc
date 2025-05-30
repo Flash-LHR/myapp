@@ -4,6 +4,6 @@
 
 namespace {
 
-TEST(HelloTest, ReturnsHello) { EXPECT_EQ("Hello", hello()); }
+TEST(HelloTest, ReturnsHello) { EXPECT_EQ("Hello", hello(2)); }
 
 }  // namespace

@@ -3,6 +3,6 @@
 
 #include <string>
 
-std::string hello();
+std::string hello(int x);
 
 #endif  // APP_HELLO_HELLO_H
