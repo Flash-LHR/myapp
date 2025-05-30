@@ -43,9 +43,6 @@ jobs:
     steps:
     - name: Checkout代码
       uses: actions/checkout@v4
-      with:
-        # 获取完整历史记录以支持增量覆盖率分析
-        fetch-depth: 0
 
     - name: 构建项目
       run: |
@@ -62,30 +59,8 @@ jobs:
     - name: 生成覆盖率报告
       run: |
         echo "📊 生成覆盖率报告..."
-        bazel coverage //app/... --combined_report=lcov --coverage_report_generator=@bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main
-
-    - name: 处理覆盖率数据
-      run: |
-        echo "📈 处理覆盖率数据..."
-        # 生成HTML报告
-        genhtml bazel-out/_coverage/_coverage_report.dat -o coverage_html
-        
-        # 计算总体覆盖率百分比
-        TOTAL_COVERAGE=$(lcov --summary bazel-out/_coverage/_coverage_report.dat 2>&1 | grep "lines......" | awk '{print $2}' | sed 's/%//')
-        echo "总体代码覆盖率: ${TOTAL_COVERAGE}%"
-
-    - name: 增量覆盖率检查
-      run: |
-        # 确定基础分支
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
-          BASE_REF="origin/${{ github.base_ref }}"
-        else
-          BASE_REF="HEAD~1"
-        fi
-        
-        # 设置脚本执行权限并运行增量覆盖率检查
-        chmod +x tools/incremental_coverage.sh
-        ./tools/incremental_coverage.sh bazel-out/_coverage/_coverage_report.dat "$BASE_REF" 85
+        bazel coverage //app/... --combined_report=lcov
+        echo "✅ 覆盖率报告生成完成"
 
     - name: 上传覆盖率到Codecov
       uses: codecov/codecov-action@v5
@@ -93,18 +68,12 @@ jobs:
         file: ./bazel-out/_coverage/_coverage_report.dat
         flags: unittests
         name: codecov-umbrella
-        fail_ci_if_error: false
+        fail_ci_if_error: true
+        verbose: true
 
-    - name: 上传覆盖率报告
+    - name: 上传覆盖率报告（用于查看）
       uses: actions/upload-artifact@v4
       with:
         name: coverage-report
-        path: coverage_html/
-
-    - name: 上传增量覆盖率报告
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: incremental-coverage-report
-        path: incremental_coverage_html/
+        path: bazel-out/_coverage/_coverage_report.dat
 
