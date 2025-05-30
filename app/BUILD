@@ -4,5 +4,6 @@ cc_binary(
     deps = [
         "//app/hello",
         "//app/world",
+        "//app/security_issues",
     ],
 )
