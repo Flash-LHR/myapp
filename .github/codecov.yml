@@ -1,6 +1,3 @@
-# Codecov配置文件
-# 文档: https://docs.codecov.com/docs/codecov-yaml
-
 coverage:
   # 覆盖率精度
   precision: 2
@@ -15,7 +12,7 @@ coverage:
     project:
       default:
         target: 85%          # 目标覆盖率
-        threshold: 1%        # 允许的下降幅度
+        threshold: 0%        # 允许的下降幅度
         if_ci_failed: error  # CI失败时的行为
 
     # 增量覆盖率（patch coverage）
@@ -27,10 +24,7 @@ coverage:
 
   # 忽略的文件和目录
   ignore:
-    - "app/security_issues/**"  # 忽略故意包含漏洞的测试代码
     - "**/*_test.cc"           # 忽略测试文件本身
-    - "**/*_demo.cc"           # 忽略演示文件
-    - "tools/**"               # 忽略工具目录
 
 # 评论配置
 comment:
