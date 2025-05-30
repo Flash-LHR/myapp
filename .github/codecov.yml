@@ -34,6 +34,9 @@ comment:
 # GitHub检查配置
 github_checks:
   annotations: true
+  require:
+    project: true  # 要求项目覆盖率检查
+    patch: true    # 要求增量覆盖率检查
 
 # 解析器配置
 parsers:
