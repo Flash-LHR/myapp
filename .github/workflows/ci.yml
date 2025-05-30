@@ -99,58 +99,23 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: ghcr.io/quarklink/images/cpp-bazel-ci:1.0.5
-      # 添加容器选项以支持 CodeQL
-      options: --privileged --user root
     permissions:
         security-events: write  # 允许写入安全扫描结果
         contents: read          # 允许读取代码
-    env:
-      # 设置环境变量以避免 CodeQL LD_PRELOAD 问题
-      LD_PRELOAD: ""
-      CODEQL_PLATFORM: linux64
-      CODEQL_EXTRACTOR_CPP_TRAP_DIR: /tmp/codeql-cpp-db
-      CODEQL_EXTRACTOR_CPP_LOG_DIR: /tmp/codeql-cpp-logs
     steps:
     - name: Checkout代码
       uses: actions/checkout@v4
-
-    - name: 准备 CodeQL 环境
-      run: |
-        echo "🔧 准备 CodeQL 运行环境..."
-        # 确保目录存在并设置权限
-        mkdir -p /tmp/codeql-cpp-db /tmp/codeql-cpp-logs
-        chmod 777 /tmp/codeql-cpp-db /tmp/codeql-cpp-logs
-        
-        # 清理可能干扰的环境变量
-        unset LD_PRELOAD
-        
-        # 检查系统库
-        echo "检查系统库..."
-        ldconfig -p | grep -E "(libc\.so|libstdc\+\+\.so)" || true
-        
-        echo "✅ CodeQL 环境准备完成"
 
     - name: 初始化CodeQL安全扫描
       uses: github/codeql-action/init@v3
       with:
         languages: cpp
-        queries: security-and-quality
-        # 配置数据库路径
-        db-location: /tmp/codeql-cpp-db
 
     - name: 构建项目用于安全分析
       run: |
         echo "🔨 构建项目用于安全分析..."
-        # 清理环境变量
-        unset LD_PRELOAD
-        export CODEQL_PLATFORM=linux64
-        bazel build //app/security_issues:security_issues
-        bazel build //app/security_issues:vulnerable_demo
-        echo "✅ 构建完成"
+        bazel build //...
 
     - name: 执行CodeQL安全分析
       uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:cpp"
-        upload-database: false
 
