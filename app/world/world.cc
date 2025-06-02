@@ -2,4 +2,4 @@
 
 #include <iostream>
 
-std::string world() { return "World"; }
+std::string world() noexcept { return "World"; }

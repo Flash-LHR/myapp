@@ -4,7 +4,12 @@
 #include <string>
 
 std::string hello(int x) noexcept {
-  int y = x + 1;
-  std::cout << y << std::endl;
+  if (x == 0) {
+    int y = x + 1;
+    int z = x * y;
+    std::cout << x << std::endl;
+    std::cout << y << std::endl;
+    std::cout << z << std::endl;
+  }
   return "Hello";
 }

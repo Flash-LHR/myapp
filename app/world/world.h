@@ -3,6 +3,6 @@
 
 #include <string>
 
-std::string world();
+std::string world() noexcept;
 
 #endif  // APP_WORLD_WORLD_H
