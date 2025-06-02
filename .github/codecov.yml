@@ -1,41 +1,29 @@
 coverage:
-  # 覆盖率精度
   precision: 2
-  # 舍入方式
   round: down
-  # 范围设置
   range: 70..100
-
-  # 状态检查配置
   status:
-    # 项目整体覆盖率
     project:
       default:
-        target: 85%          # 目标覆盖率
-        if_ci_failed: error  # CI失败时的行为
-
-    # 增量覆盖率（patch coverage）
+        target: 85%
+        threshold: 0%  # 严格不允许任何浮动
+        if_ci_failed: error
     patch:
       default:
-        target: 85%          # 新增代码覆盖率要求
-        if_ci_failed: error  # CI失败时的行为
+        target: 85%
+        threshold: 0%
+        if_ci_failed: error
 
-  # 忽略的文件和目录
-  ignore:
-    - "**/*_test.cc"           # 忽略测试文件本身
+# 确保只关注业务代码
+ignore:
+  - "**/*_test.cc"
 
-# 评论配置
+# 强制 Codecov 返回状态检查
+codecov:
+  require_ci_to_pass: true  # 要求所有 CI 任务通过
+
+# 更严格的注释配置
 comment:
-  # 在PR中显示覆盖率评论
-  layout: "reach,diff,flags,tree"
-  behavior: default
-  require_changes: false
-
-# 解析器配置
-parsers:
-  gcov:
-    branch_detection:
-      conditional: yes
-      loop: yes
-      method: no
-      macro: no 
+  layout: "reach,diff,flags,tree,changes"
+  behavior: once
+  branches: null  # 应用到所有分支
