@@ -7,7 +7,6 @@ on:
     branches: [ master ]
 
 jobs:
-  # 代码质量检查
   code-quality:
     name: 代码质量检查
     runs-on: ubuntu-22.04
@@ -20,7 +19,9 @@ jobs:
     - name: 检查代码格式
       run: |
         echo "🎨 检查代码格式..."
-        find app -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.h" -o -name "*.hpp" -o -name "*.hxx" | xargs clang-format --dry-run --Werror
+        mkdir -p reports
+        # 检查代码格式并生成报告
+        find app -name "*.c*" -o -name "*.h*" | xargs clang-format --dry-run --Werror 2>&1 | tee reports/format-check.txt
         echo "✅ 代码格式检查通过"
 
     - name: 生成编译数据库
@@ -31,10 +32,18 @@ jobs:
     - name: 运行静态分析
       run: |
         echo "🔍 运行静态分析..."
-        find app -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.h" -o -name "*.hpp" -o -name "*.hxx" | xargs clang-tidy -p . --quiet
+        # 运行静态分析并生成报告
+        find app -name "*.c*" -o -name "*.h*" | xargs clang-tidy -p . --quiet --warnings-as-errors="*" 2>&1 | tee reports/static-analysis.txt
         echo "✅ 静态分析检查通过"
 
-  # 构建、测试和覆盖率
+    - name: 上传代码质量报告
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: code-quality-reports
+        path: reports/
+        retention-days: 30
+
   build-test-coverage:
     name: 构建、测试和覆盖率
     runs-on: ubuntu-22.04
@@ -53,7 +62,9 @@ jobs:
     - name: 运行单元测试
       run: |
         echo "🧪 运行单元测试..."
-        bazel test //app/... --test_output=all
+        mkdir -p reports
+        # 运行单元测试并生成报告
+        bazel test //app/... --test_output=all --test_summary=detailed 2>&1 | tee reports/unit-tests.txt
         echo "✅ 单元测试通过"
 
     - name: 生成覆盖率报告
@@ -72,9 +83,10 @@ jobs:
         fail_ci_if_error: true
         verbose: true
 
-    - name: 上传覆盖率报告（用于查看）
+    - name: 上传测试报告
       uses: actions/upload-artifact@v4
+      if: always()
       with:
-        name: coverage-report
-        path: bazel-out/_coverage/_coverage_report.dat
-
+        name: test-reports
+        path: reports/
+        retention-days: 30
