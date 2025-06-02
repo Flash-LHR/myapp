@@ -11,6 +11,16 @@ std::string hello(int x) noexcept {
     std::cout << y << std::endl;
     std::cout << z << std::endl;
     std::cout << z << std::endl;
+    std::cout << z << std::endl;
+    std::cout << z << std::endl;
+    std::cout << z << std::endl;
+    std::cout << z << std::endl;
+    std::cout << z << std::endl;
+    std::cout << z << std::endl;
+    std::cout << z << std::endl;
+    std::cout << z << std::endl;
+    std::cout << z << std::endl;
+    std::cout << z << std::endl;
   }
   return "Hello";
 }
