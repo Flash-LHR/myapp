@@ -7,7 +7,6 @@ on:
     branches: [ master ]
 
 jobs:
-  # 代码质量检查
   code-quality:
     name: 代码质量检查
     runs-on: ubuntu-22.04
@@ -19,22 +18,16 @@ jobs:
 
     - name: 检查代码格式
       run: |
-        echo "🎨 检查代码格式..."
         find app -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.h" -o -name "*.hpp" -o -name "*.hxx" | xargs clang-format --dry-run --Werror
-        echo "✅ 代码格式检查通过"
 
     - name: 生成编译数据库
       run: |
-        echo "📝 生成编译数据库..."
         bazel run @hedron_compile_commands//:refresh_all
 
     - name: 运行静态分析
       run: |
-        echo "🔍 运行静态分析..."
-        find app -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.h" -o -name "*.hpp" -o -name "*.hxx" | xargs clang-tidy -p . --quiet
-        echo "✅ 静态分析检查通过"
+        find app -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.h" -o -name "*.hpp" -o -name "*.hxx" | xargs clang-tidy -p . --warnings-as-errors="*"
 
-  # 构建、测试和覆盖率
   build-test-coverage:
     name: 构建、测试和覆盖率
     runs-on: ubuntu-22.04
@@ -46,21 +39,15 @@ jobs:
 
     - name: 构建项目
       run: |
-        echo "🔨 构建项目..."
         bazel build //app:main
-        echo "✅ 项目构建成功"
 
     - name: 运行单元测试
       run: |
-        echo "🧪 运行单元测试..."
         bazel test //app/... --test_output=all
-        echo "✅ 单元测试通过"
 
     - name: 生成覆盖率报告
       run: |
-        echo "📊 生成覆盖率报告..."
         bazel coverage //app/... --combined_report=lcov
-        echo "✅ 覆盖率报告生成完成"
 
     - name: 上传覆盖率到Codecov
       uses: codecov/codecov-action@v5
@@ -71,10 +58,3 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: true
         verbose: true
-
-    - name: 上传覆盖率报告（用于查看）
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: bazel-out/_coverage/_coverage_report.dat
-
