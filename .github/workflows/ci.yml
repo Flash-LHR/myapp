@@ -26,7 +26,7 @@ jobs:
 
     - name: 运行静态分析
       run: |
-        find app -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.h" -o -name "*.hpp" -o -name "*.hxx" | xargs clang-tidy -p . --quiet --warnings-as-errors="*"
+        find app -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.h" -o -name "*.hpp" -o -name "*.hxx" | xargs clang-tidy -p . --warnings-as-errors="*"
 
   build-test-coverage:
     name: 构建、测试和覆盖率

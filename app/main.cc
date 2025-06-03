@@ -1,20 +1,21 @@
 #include <cstring>
 #include <iostream>
-#include <memory>
 
 #include "app/hello/hello.h"
 #include "app/world/world.h"
 
-void safe_operations() {
-  // 修复1: 使用智能指针和安全的字符串操作
-  std::unique_ptr<char[]> buffer(new char[100]);
-  strncpy(buffer.get(), "Hello", 99);
-  buffer[99] = '\0';  // 确保字符串结尾
+void unsafe_operations() {
+  // 问题1: 原始指针操作
+  char* buffer = new char[100];
+  strcpy(buffer, "Hello");
 
-  // 修复2: 移除未使用的变量，如果需要类型转换可以这样做：
-  // auto* int_ptr = reinterpret_cast<int*>(buffer.get());
+  // 问题2: C风格类型转换
+  int* int_ptr = (int*)buffer;
 
-  // 修复3: 智能指针自动管理内存，不需要手动delete
+  // 问题3: 手动内存管理
+  if (true) {
+    delete[] buffer;  // 可能的内存泄漏风险
+  }
 }
 
 int main() {
