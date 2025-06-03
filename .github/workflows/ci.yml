@@ -20,14 +20,9 @@ jobs:
       run: |
         echo "🎨 检查代码格式..."
         mkdir -p reports
-        # 检查代码格式并生成报告
-        find app -name "*.c*" -o -name "*.h*" | xargs clang-format --dry-run --Werror 2>&1 | tee reports/format-check.txt
-        # 检查管道中xargs clang-format命令的退出状态
-        if [ ${PIPESTATUS[1]} -ne 0 ]; then
-          echo "❌ 代码格式检查失败"
-          exit 1
-        fi
-        echo "✅ 代码格式检查通过"
+        find app -name "*.c*" -o -name "*.h*" | xargs clang-format --dry-run --Werror > reports/format-check.txt 2>&1; EXIT_CODE=$?
+        echo "📋 代码格式检查报告:" && cat reports/format-check.txt
+        [ $EXIT_CODE -eq 0 ] && echo "✅ 代码格式检查通过" || { echo "❌ 代码格式检查失败"; exit 1; }
 
     - name: 生成编译数据库
       run: |
@@ -37,14 +32,9 @@ jobs:
     - name: 运行静态分析
       run: |
         echo "🔍 运行静态分析..."
-        # 运行静态分析并生成报告
-        find app -name "*.c*" -o -name "*.h*" | xargs clang-tidy -p . --quiet --warnings-as-errors="*" 2>&1 | tee reports/static-analysis.txt
-        # 检查管道中xargs clang-tidy命令的退出状态
-        if [ ${PIPESTATUS[1]} -ne 0 ]; then
-          echo "❌ 静态分析检查失败"
-          exit 1
-        fi
-        echo "✅ 静态分析检查通过"
+        find app -name "*.c*" -o -name "*.h*" | xargs clang-tidy -p . --quiet --warnings-as-errors="*" > reports/static-analysis.txt 2>&1; EXIT_CODE=$?
+        echo "📋 静态分析报告:" && cat reports/static-analysis.txt
+        [ $EXIT_CODE -eq 0 ] && echo "✅ 静态分析检查通过" || { echo "❌ 静态分析检查失败"; exit 1; }
 
     - name: 上传代码质量报告
       uses: actions/upload-artifact@v4
@@ -73,14 +63,9 @@ jobs:
       run: |
         echo "🧪 运行单元测试..."
         mkdir -p reports
-        # 运行单元测试并生成报告
-        bazel test //app/... --test_output=all --test_summary=detailed 2>&1 | tee reports/unit-tests.txt
-        # 检查管道中第一个命令的退出状态
-        if [ ${PIPESTATUS[0]} -ne 0 ]; then
-          echo "❌ 单元测试失败"
-          exit 1
-        fi
-        echo "✅ 单元测试通过"
+        bazel test //app/... --test_output=all --test_summary=detailed > reports/unit-tests.txt 2>&1; EXIT_CODE=$?
+        echo "📋 单元测试报告:" && cat reports/unit-tests.txt
+        [ $EXIT_CODE -eq 0 ] && echo "✅ 单元测试通过" || { echo "❌ 单元测试失败"; exit 1; }
 
     - name: 生成覆盖率报告
       run: |
